@@ -1,30 +1,66 @@
 import streamlit as st
 import pandas as pd
-import joblib
+import numpy as np
+import os
 
-st.set_page_config(page_title="Insurance Premium Prediction", page_icon="💰", layout="centered")
+# ----------------------------
+# Load trained model
+# ----------------------------
+model_path = os.path.join(os.path.dirname(__file__), "best_model.pkl")
 
-st.title("💰 Insurance Premium Prediction App (Linear Regression)")
-st.subheader("Predict health insurance cost using a pre-trained base model")
+st.title("💰 Insurance Premium Prediction App")
+st.write("Predict insurance charges based on customer details using a trained Linear Regression model.")
 
-# Load your base model
-model = joblib.load("base_model.pkl")
+try:
+    model = pd.read_pickle(model_path)
+    st.success("✅ Model loaded successfully!")
+except FileNotFoundError:
+    st.error(f"❌ Model file not found at: {model_path}")
+    st.stop()
+except Exception as e:
+    st.error(f"⚠️ Error loading model: {e}")
+    st.stop()
 
-# Sidebar inputs
-st.sidebar.header("Enter Details")
+# ----------------------------
+# User input section
+# ----------------------------
+st.header("Enter Customer Details")
 
-age = st.sidebar.number_input("Age", 18, 100, 30)
-bmi = st.sidebar.number_input("BMI", 10.0, 50.0, 25.0)
-children = st.sidebar.slider("Children", 0, 5, 0)
-smoker = st.sidebar.selectbox("Smoker", ["No", "Yes"])
+age = st.number_input("Age", min_value=0, max_value=120, value=25)
+bmi = st.number_input("BMI (Body Mass Index)", min_value=10.0, max_value=60.0, value=25.0)
+children = st.number_input("Number of Children", min_value=0, max_value=10, value=0)
+smoker = st.selectbox("Smoker", ["No", "Yes"])
+sex = st.selectbox("Sex", ["Male", "Female"])
+region = st.selectbox("Region", ["northeast", "northwest", "southeast", "southwest"])
 
-# Convert categorical to numeric
+# ----------------------------
+# Preprocessing input
+# ----------------------------
+# Convert categorical data to numerical or one-hot encode (depends on how model was trained)
+# Here is a simple placeholder version
 smoker_val = 1 if smoker == "Yes" else 0
+sex_val = 1 if sex == "Male" else 0
 
-# Prepare input
-input_df = pd.DataFrame([[age, bmi, children, smoker_val]], columns=["age", "bmi", "children", "smoker"])
+# You may need to one-hot encode the region variable if your model expects it.
+# For simplicity, let’s just map it to numbers:
+region_map = {"northeast": 0, "northwest": 1, "southeast": 2, "southwest": 3}
+region_val = region_map[region]
 
-if st.sidebar.button("Predict"):
-    prediction = model.predict(input_df)[0]
-    st.success(f"Predicted Insurance Premium: ${prediction:.2f}")
+# Create a single-row input array
+input_data = np.array([[age, bmi, children, smoker_val, sex_val, region_val]])
 
+# ----------------------------
+# Prediction
+# ----------------------------
+if st.button("🔮 Predict Premium"):
+    try:
+        prediction = model.predict(input_data)
+        st.success(f"💵 Estimated Insurance Premium: **${prediction[0]:,.2f}**")
+    except Exception as e:
+        st.error(f"⚠️ Prediction error: {e}")
+
+# ----------------------------
+# Footer
+# ----------------------------
+st.markdown("---")
+st.caption("Built with ❤️ using Streamlit and a Linear Regression model.")
