@@ -8,7 +8,7 @@ st.title("💰 Insurance Premium Prediction App (Linear Regression)")
 st.subheader("Predict health insurance cost using a pre-trained base model")
 
 # Load your base model
-model = joblib.load("model/base_model.pkl")
+model = joblib.load("base_model.pkl")
 
 # Sidebar inputs
 st.sidebar.header("Enter Details")
